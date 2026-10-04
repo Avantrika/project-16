@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}User Safety Profile - SmartTrade Guard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Personal Safety Profile</h1>
+        <p class="page-subtitle">Configure your personal trading boundaries, budget constraints, and capital safety declarations.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start;">
+    <!-- Profile Form -->
+    <div class="card">
+        <form method="POST" action="{{ url_for('profile') }}">
+            <div class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366f1;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Trader Identity & Safety Limits
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="name">Trader Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ user.name or 'Alex Mercer' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="safe_budget">Safe Trading Budget (₹)</label>
+                    <div class="form-desc">Total discretionary capital allocated for simulated trading.</div>
+                    <input type="number" step="100" class="form-control" id="safe_budget" name="safe_budget" value="{{ user.safe_budget or 10000 }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="max_loss">Maximum Planned Loss Per Trade (₹)</label>
+                    <div class="form-desc">Exceeding this threshold triggers rule violation risk.</div>
+                    <input type="number" step="50" class="form-control" id="max_loss" name="max_loss" value="{{ user.max_loss or 1000 }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="max_daily_trades">Maximum Daily Trades</label>
+                    <div class="form-desc">Daily ceiling before overtrading warnings activate.</div>
+                    <input type="number" min="1" max="50" class="form-control" id="max_daily_trades" name="max_daily_trades" value="{{ user.max_daily_trades or 5 }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Preferred Trading Hours Window</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="time" class="form-control" name="preferred_hours_start" value="{{ user.preferred_hours_start or '09:15' }}">
+                        <span style="color: var(--text-muted);">to</span>
+                        <input type="time" class="form-control" name="preferred_hours_end" value="{{ user.preferred_hours_end or '15:30' }}">
+                    </div>
+                    <div class="form-desc" style="margin-top: 6px;">Trades placed outside this window will trigger off-hours flags.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="preferred_holding_period">Default Planned Holding Horizon</label>
+                    <select class="form-control" id="preferred_holding_period" name="preferred_holding_period">
+                        <option value="Intraday" {% if user.preferred_holding_period == 'Intraday' %}selected{% endif %}>Intraday (Same Day Exit)</option>
+                        <option value="Swing (2-5 Days)" {% if user.preferred_holding_period == 'Swing (2-5 Days)' %}selected{% endif %}>Swing (2-5 Days)</option>
+                        <option value="Positional (1-4 Weeks)" {% if user.preferred_holding_period == 'Positional (1-4 Weeks)' %}selected{% endif %}>Positional (1-4 Weeks)</option>
+                        <option value="Long Term (> 1 Month)" {% if user.preferred_holding_period == 'Long Term (> 1 Month)' %}selected{% endif %}>Long Term (> 1 Month)</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 24px 0;">
+
+            <!-- Financial Safety Overrides Section -->
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span class="safety-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">Critical Override Policy</span>
+                    <strong style="font-size: 0.95rem; color: var(--text-main);">Capital Nature Declaration</strong>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                    SmartTrade Guard uses these fields strictly as <strong>user-provided financial safety information</strong>. If declared as essential or borrowed funds, simulated trades are immediately locked into a mandatory cooling-off period to protect you from catastrophic real-world habits.
+                </p>
+            </div>
+
+            <!-- Essential Money Question -->
+            <div class="form-group" style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1px solid var(--border-subtle);">
+                <label class="form-label" style="font-size: 0.9rem;">
+                    Are you allocating emergency or essential living money?
+                </label>
+                <div class="form-desc">
+                    Includes funds required for rent, groceries, medical emergencies, or family necessities.
+                </div>
+                <div style="display: flex; gap: 16px; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-size: 0.9rem;">
+                        <input type="radio" name="essential_money_flag" value="0" {% if not user.essential_money_flag %}checked{% endif %}>
+                        <strong>No</strong> (Discretionary risk capital only)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ef4444; font-size: 0.9rem;">
+                        <input type="radio" name="essential_money_flag" value="1" {% if user.essential_money_flag %}checked{% endif %}>
+                        <strong>Yes</strong> (Triggers immediate High-Risk Override)
+                    </label>
+                </div>
+            </div>
+
+            <!-- Borrowed Money Question -->
+            <div class="form-group" style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1px solid var(--border-subtle); margin-top: 14px;">
+                <label class="form-label" style="font-size: 0.9rem;">
+                    Are you trading with borrowed money or high-interest credit?
+                </label>
+                <div class="form-desc">
+                    Includes credit card cash advances, personal loans, or loans from friends/relatives.
+                </div>
+                <div style="display: flex; gap: 16px; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-size: 0.9rem;">
+                        <input type="radio" name="borrowed_money_flag" value="0" {% if not user.borrowed_money_flag %}checked{% endif %}>
+                        <strong>No</strong> (Self-owned discretionary savings)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ef4444; font-size: 0.9rem;">
+                        <input type="radio" name="borrowed_money_flag" value="1" {% if user.borrowed_money_flag %}checked{% endif %}>
+                        <strong>Yes</strong> (Triggers immediate High-Risk Override)
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <button type="submit" class="btn btn-primary" style="padding: 12px 28px;">
+                    Save Personal Safety Rules
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Side Guidance Panel -->
+    <div>
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-title" style="font-size: 0.95rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #10b981;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Safety Rules Enforcement
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px;">
+                Every simulated order you place is matched in real time against these rules.
+            </p>
+            <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 18px; line-height: 1.6;">
+                <li>Orders above <strong>₹{{ "{:,.0f}".format(user.safe_budget or 10000) }}</strong> add +45 to your Personal Rule Violation score.</li>
+                <li>Stop losses exceeding <strong>₹{{ "{:,.0f}".format(user.max_loss or 1000) }}</strong> add +40 risk points.</li>
+                <li>Orders after <strong>{{ user.preferred_hours_end or '15:30' }}</strong> will be flagged as off-hours trading.</li>
+            </ul>
+        </div>
+
+        <div class="card" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #ef4444; margin-bottom: 8px;">
+                Why Financial Overrides Matter
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">
+                Behavioral studies show that trading with essential or borrowed funds increases cortisol and induces panic selling, reckless revenge trading, and devastating drawdowns.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Risk Rules Engine - SmartTrade Guard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Risk Rules Engine & Triggers</h1>
+        <p class="page-subtitle">Transparent configuration of rule weights, cooling-off duration triggers, and behavioral threshold limits.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+    <!-- Weights & Normalized Formulas -->
+    <div class="card">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366f1;"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+            Transparent Risk Engine Weights
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+            Every simulated order is evaluated across 6 normalized factors (0–100) before computing the composite risk score:
+        </p>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Risk Dimension</th>
+                        <th>Weight</th>
+                        <th>Core Detection Logic</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong style="color: #ef4444;">Loss Chasing</strong></td>
+                        <td><strong style="font-family: var(--font-mono); color: #818cf8;">30%</strong></td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">Trade placed shortly after loss with increased position size</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #f59e0b;">Overtrading</strong></td>
+                        <td><strong style="font-family: var(--font-mono); color: #818cf8;">20%</strong></td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">Frequency bursts (&gt;4 trades in 15 min or &gt;daily limit)</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #8b5cf6;">FOMO / Hype</strong></td>
+                        <td><strong style="font-family: var(--font-mono); color: #818cf8;">20%</strong></td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">Self-reported influencer, social media, or sudden spike influence</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #ec4899;">Risk Escalation</strong></td>
+                        <td><strong style="font-family: var(--font-mono); color: #818cf8;">15%</strong></td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">Steadily increasing order sizes across consecutive executions</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #06b6d4;">Personal Rules</strong></td>
+                        <td><strong style="font-family: var(--font-mono); color: #818cf8;">10%</strong></td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">Safe budget breach, max loss limit breach, or off-hours</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #10b981;">Emotional Signal</strong></td>
+                        <td><strong style="font-family: var(--font-mono); color: #818cf8;">5%</strong></td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">Self-reported tilt states (Angry, Frustrated, Anxious)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 16px; background: rgba(99, 102, 241, 0.1); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1;">
+            Composite = (LossChasing×0.30) + (Overtrading×0.20) + (FOMO×0.20) + (Escalation×0.15) + (Rule×0.10) + (Emotion×0.05)
+        </div>
+    </div>
+
+    <!-- Concrete Cooling-Off Rules & Triggers -->
+    <div class="card">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ef4444;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Concrete Cooling-Off Triggers (Section 10)
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+            Automatic algorithmic interventions that lock trading execution into strict countdowns:
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 0.88rem; color: var(--text-main);">Trigger 1: Loss Chasing Streak</strong>
+                    <span class="badge-risk high">30-Min Lock</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                    3 losing trades within 30 minutes + next trade amount is larger.
+                </div>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 0.88rem; color: var(--text-main);">Trigger 2: Extreme Overtrading Burst</strong>
+                    <span class="badge-risk medium">15-Min Lock</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                    5 or more simulated trades placed within a 15-minute rolling window.
+                </div>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 0.88rem; color: var(--text-main);">Trigger 3: Financial Capital Safety Override</strong>
+                    <span class="badge-risk high">30-Min Lock</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                    Emergency/essential funds = YES or Borrowed money = YES (Overrides score).
+                </div>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 0.88rem; color: var(--text-main);">Trigger 4: Compound Risk Convergence</strong>
+                    <span class="badge-risk high">30-Min Lock</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                    Multiple high-risk signals (Score &ge; 60/100) occurring simultaneously.
+                </div>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 0.88rem; color: var(--text-main);">Trigger 5: Midnight Impulse Window</strong>
+                    <span class="badge-risk medium">30-Min Lock</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                    Trading after midnight (00:00 - 05:00) coupled with elevated emotion/size.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Three Action Tiers -->
+<div class="card">
+    <div class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #10b981;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Action Tiers & Intervention Protocols
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+        <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 18px;">
+            <span class="badge-risk low">Score 0 – 29</span>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #34d399; margin: 10px 0 6px 0;">ALLOW SIMULATED TRADE</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                No major behavioural risk pattern detected. Trade executed smoothly and logged into Decision Journal.
+            </p>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 10px; padding: 18px;">
+            <span class="badge-risk medium">Score 30 – 59</span>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #fbbf24; margin: 10px 0 6px 0;">WARNING + REFLECTION</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                Highlights detected cognitive patterns. Asks trader to review decision parameters before continuing.
+            </p>
+        </div>
+
+        <div style="background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 10px; padding: 18px;">
+            <span class="badge-risk high">Score 60 – 100</span>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #ef4444; margin: 10px 0 6px 0;">MANDATORY COOLING-OFF</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                Enforces real JavaScript countdown lock (15–30 min). Trader must pause, review guided prompts, and reconsider.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

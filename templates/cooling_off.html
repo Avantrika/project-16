@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Mandatory Cooling-Off Period - SmartTrade Guard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="safety-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; margin-bottom: 8px;">
+            Active Behavioral Intervention
+        </div>
+        <h1 class="page-title">Mandatory Cooling-Off Interception</h1>
+        <p class="page-subtitle">Your recent simulated trading signals indicate high risk. Trading execution is temporarily paused.</p>
+    </div>
+    <!-- Fast forward helper for evaluators/demo -->
+    <div>
+        <button type="button" class="btn btn-secondary" onclick="window.coolingTimer.fastForward(3);" style="font-size: 0.8rem; border-color: rgba(99, 102, 241, 0.4);">
+            ⚡ Fast-Forward Timer (Demo Mode)
+        </button>
+    </div>
+</div>
+
+<div style="max-width: 900px; margin: 0 auto;">
+    <!-- Countdown Box -->
+    <div class="countdown-box">
+        <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #ef4444; letter-spacing: 0.08em; margin-bottom: 8px;">
+            {{ trigger_rule }}
+        </div>
+        <div class="countdown-digits" id="countdownTimerDisplay">
+            --:--
+        </div>
+        <div id="countdownStatusText" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 8px;">
+            Mandatory cooling-off in progress. Reflection active.
+        </div>
+    </div>
+
+    <!-- Active Intervention Rationale -->
+    <div class="card" style="margin-bottom: 24px; border-color: rgba(239, 68, 68, 0.3);">
+        <div class="card-title" style="color: #ef4444;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+            Why SmartTrade Guard Intervened
+        </div>
+        
+        <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 14px;">
+            <strong>Primary Behavioral Concern:</strong> {{ analysis.primary_concern }}
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Trade Position</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">{{ trade.asset }} · ₹{{ "{:,.0f}".format(trade.amount) }}</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Reported Emotion</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #f87171;">{{ trade.emotion }}</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Decision Influence</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #fbbf24;">{{ trade.fomo_source }}</div>
+            </div>
+        </div>
+
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px;">
+            {% for pat in analysis.patterns_list %}
+            <li style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #ef4444; font-weight: bold;">✕</span> {{ pat }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Structured Self-Reflection Prompts -->
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #818cf8;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Structured Reflection Protocol (Review During Pause)
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+            Cognitive pauses break dopamine-driven revenge trading. Before this timer finishes, reflect on these questions:
+        </p>
+
+        <div class="reflection-card">
+            <div class="reflection-question">
+                <span style="color: #6366f1;">•</span> Are you attempting to recover previous losses with this trade?
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Losses are an unavoidable cost of trading. Escalating position size to "get even" is the #1 predictor of account wipeout.
+            </p>
+        </div>
+
+        <div class="reflection-card">
+            <div class="reflection-question">
+                <span style="color: #6366f1;">•</span> Does this order strictly conform to your written rules?
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Check your safe budget limit (₹{{ "{:,.0f}".format(current_user.safe_budget) }}) and planned stop-loss (₹{{ "{:,.0f}".format(trade.planned_loss) }}).
+            </p>
+        </div>
+
+        <div class="reflection-card">
+            <div class="reflection-question">
+                <span style="color: #6366f1;">•</span> Would you take this trade if you hadn't checked social media / chatrooms?
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                External hype creates an artificial sense of urgency that vanishes within 30 minutes.
+            </p>
+        </div>
+    </div>
+
+    <!-- Proceed Action locked by countdown -->
+    <div style="text-align: center;">
+        <a id="btnProceedToDecision" href="{{ url_for('feedback', trade_id=trade.id) }}" class="btn btn-secondary" style="padding: 14px 36px; font-size: 1rem; width: 100%; max-width: 450px;">
+            🔒 Locked — Awaiting Cooling-Off Completion
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const duration = {{ duration|default(1800) }};
+        window.coolingTimer = new CoolingOffTimer(
+            duration,
+            'countdownTimerDisplay',
+            'btnProceedToDecision',
+            'countdownStatusText'
+        );
+    });
+</script>
+{% endblock %}

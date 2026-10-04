@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Trading Dashboard - SmartTrade Guard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Trading Safety Dashboard</h1>
+        <p class="page-subtitle">Real-time surveillance of your behavioural trading posture and active risk limits.</p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <a href="{{ url_for('new_trade') }}" class="btn btn-primary">
+            + New Simulated Trade
+        </a>
+        <a href="{{ url_for('analytics') }}" class="btn btn-secondary">
+            Full Analytics →
+        </a>
+    </div>
+</div>
+
+<!-- Risk Overview Stat Cards -->
+<div class="stats-grid">
+    <div class="stat-box {% if summary.latest_risk_level == 'HIGH' %}rose{% elif summary.latest_risk_level == 'MEDIUM' %}amber{% else %}emerald{% endif %}">
+        <div class="stat-label">Current Risk Level</div>
+        <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 4px;">
+            <span class="badge-risk {{ summary.latest_risk_level|lower }}" style="font-size: 0.95rem; padding: 6px 16px;">
+                {{ summary.latest_risk_level }}
+            </span>
+            <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">{{ summary.latest_risk_score }}/100</span>
+        </div>
+        <div class="stat-sub">Based on most recent simulated evaluation</div>
+    </div>
+
+    <div class="stat-box primary">
+        <div class="stat-label">Discipline Score</div>
+        <div class="stat-value" style="color: #818cf8;">{{ discipline_score }}<span style="font-size: 1rem; color: var(--text-muted);">/100</span></div>
+        <div class="stat-sub">Objective adherence to your rules & cool-down</div>
+    </div>
+
+    <div class="stat-box cyan">
+        <div class="stat-label">Simulated Trades Today</div>
+        <div class="stat-value">{{ summary.trades_today }}</div>
+        <div class="stat-sub">Max allowed daily: {{ current_user.max_daily_trades if current_user else 5 }}</div>
+    </div>
+
+    <div class="stat-box amber">
+        <div class="stat-label">High-Risk Interventions</div>
+        <div class="stat-value" style="color: #fbbf24;">{{ summary.high_risk_count }}</div>
+        <div class="stat-sub">{{ effectiveness.effectiveness_rate }}% intervention efficacy rate</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
+    <!-- Recent Orders & Surveillance Stream -->
+    <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366f1;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Recent Simulated Trades & Behavioural Audit
+            </span>
+            <a href="{{ url_for('history') }}" style="font-size: 0.8rem; color: #818cf8; text-decoration: none;">View All History →</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Asset & Type</th>
+                        <th>Amount</th>
+                        <th>Risk Score</th>
+                        <th>Status</th>
+                        <th>Primary Concern</th>
+                        <th>Audit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in recent_trades %}
+                    <tr>
+                        <td>
+                            <strong>{{ t.asset }}</strong>
+                            <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; margin-left: 6px; background: {% if t.trade_type == 'BUY' %}rgba(16, 185, 129, 0.2); color: #34d399;{% else %}rgba(239, 68, 68, 0.2); color: #f87171;{% endif %}">
+                                {{ t.trade_type }}
+                            </span>
+                            <div style="font-size: 0.72rem; color: var(--text-faint);">{{ t.timestamp[:16] }}</div>
+                        </td>
+                        <td>
+                            <strong style="font-family: var(--font-mono);">₹{{ "{:,.0f}".format(t.amount) }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge-risk {{ (t.risk_level or 'LOW')|lower }}">
+                                {{ t.overall_score or 0 }}/100 {{ t.risk_level or 'LOW' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.8rem; font-weight: 600; color: {% if t.status == 'CANCELLED' %}#10b981{% elif t.status == 'MODIFIED' %}#818cf8{% elif t.status == 'BLOCKED_COOLING' %}#ef4444{% else %}var(--text-muted){% endif %}">
+                                {{ t.status }}
+                            </span>
+                        </td>
+                        <td style="font-size: 0.78rem; color: var(--text-muted); max-width: 220px;">
+                            {{ t.primary_concern or 'Normal parameters' }}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('risk_analysis', trade_id=t.id) }}" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                            No simulated trades entered yet. Click "+ New Simulated Trade" to begin.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right Side: Behavioral Profile & Discipline Breakdown -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Discipline Breakdown Card -->
+        <div class="card">
+            <div class="card-title" style="font-size: 0.95rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #818cf8;"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Discipline Pillar Breakdown
+            </div>
+            
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="color: var(--text-muted);">Personal Rule Adherence</span>
+                    <span>{{ discipline_breakdown.rule_adherence }} / 30</span>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ (discipline_breakdown.rule_adherence / 30) * 100 }}%; background: #10b981;"></div>
+                </div>
+            </div>
+
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="color: var(--text-muted);">Intervention Compliance</span>
+                    <span>{{ discipline_breakdown.intervention_compliance }} / 30</span>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ (discipline_breakdown.intervention_compliance / 30) * 100 }}%; background: #6366f1;"></div>
+                </div>
+            </div>
+
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="color: var(--text-muted);">Emotional Composure</span>
+                    <span>{{ discipline_breakdown.emotional_control }} / 20</span>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ (discipline_breakdown.emotional_control / 20) * 100 }}%; background: #06b6d4;"></div>
+                </div>
+            </div>
+
+            <div class="factor-row" style="margin-bottom: 0;">
+                <div class="factor-header">
+                    <span style="color: var(--text-muted);">FOMO Resistance</span>
+                    <span>{{ discipline_breakdown.strategy_focus }} / 20</span>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ (discipline_breakdown.strategy_focus / 20) * 100 }}%; background: #f59e0b;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Intervention Efficacy Snapshot -->
+        <div class="card" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: #34d399; font-weight: 700; margin-bottom: 4px;">
+                Prototype Behavioural Metric
+            </div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">
+                Intervention Effectiveness: {{ effectiveness.effectiveness_rate }}%
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                {{ effectiveness.cancelled }} cancelled + {{ effectiveness.modified }} modified out of {{ effectiveness.total_high_risk }} high-risk interventions. The system successfully altered impulsive trade execution in {{ effectiveness.effectiveness_rate }}% of risky scenarios.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

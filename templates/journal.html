@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Decision Journal - SmartTrade Guard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Decision vs. Outcome Journal</h1>
+        <p class="page-subtitle">Comparing Planned vs. Actual execution. Evaluates discipline quality rather than random market luck.</p>
+    </div>
+    <div style="text-align: right;">
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Overall Discipline Rating:</span>
+        <strong style="color: #818cf8; font-size: 1.1rem; margin-left: 6px;">{{ discipline_score }}/100</strong>
+    </div>
+</div>
+
+<!-- Essential Philosophy Banner -->
+<div class="card" style="margin-bottom: 24px; background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25);">
+    <div style="display: flex; gap: 14px; align-items: flex-start;">
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: #6366f1; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+        </div>
+        <div>
+            <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem; margin-bottom: 4px;">
+                Core Behavioral Rule: Outcome Bias Prevention
+            </div>
+            <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+                In probabilistic markets, bad decisions can accidentally result in profits, and good disciplined decisions can result in controlled losses. SmartTrade Guard evaluates your <strong>execution discipline</strong>, not market noise. A trade that breached risk limits is marked as <strong>Low Discipline</strong>, even if it turned a profit.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Journal Items Stream -->
+<div style="display: flex; flex-direction: column; gap: 18px;">
+    {% for item in journal_items %}
+    <div class="card" style="border-left: 4px solid {% if item.is_lucky_gamble %}#f59e0b{% elif item.discipline_rating == 'HIGH' %}#10b981{% elif item.discipline_rating == 'MODERATE' %}#6366f1{% else %}#ef4444{% endif %};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <span style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);">{{ item.asset }}</span>
+                <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; background: {% if item.trade_type == 'BUY' %}rgba(16, 185, 129, 0.2); color: #34d399;{% else %}rgba(239, 68, 68, 0.2); color: #f87171;{% endif %} font-weight: 700;">
+                    {{ item.trade_type }}
+                </span>
+                <span style="font-size: 0.75rem; color: var(--text-faint); margin-left: 10px;">{{ item.timestamp }}</span>
+            </div>
+
+            <!-- Discipline & Outcome Badges -->
+            <div style="display: flex; gap: 8px; align-items: center;">
+                {% if item.is_lucky_gamble %}
+                <span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">
+                    ⚠️ Lucky Win / Poor Discipline
+                </span>
+                {% endif %}
+
+                <span style="background: {% if item.discipline_rating == 'HIGH' %}rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);{% elif item.discipline_rating == 'MODERATE' %}rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);{% else %}rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);{% endif %} padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">
+                    Discipline: {{ item.discipline_rating }}
+                </span>
+
+                <span style="font-family: var(--font-mono); font-weight: 700; font-size: 0.95rem; color: {% if item.profit_loss > 0 %}#10b981{% elif item.profit_loss < 0 %}#ef4444{% else %}var(--text-muted){% endif %};">
+                    {% if item.status == 'CANCELLED' %}
+                        CANCELLED (₹0 Loss)
+                    {% else %}
+                        {% if item.profit_loss >= 0 %}+{% endif %}₹{{ "{:,.0f}".format(item.profit_loss) }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Planned vs Actual Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 10px; margin-bottom: 14px;">
+            <!-- Planned Column -->
+            <div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; color: #818cf8; font-weight: 700; margin-bottom: 8px;">
+                    Planned Intent (Pre-Trade)
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
+                    <div>Position Size: <strong style="color: var(--text-main);">₹{{ "{:,.0f}".format(item.planned_amount) }}</strong></div>
+                    <div>Holding Period: <strong style="color: var(--text-main);">{{ item.planned_holding }}</strong></div>
+                    <div>Max Acceptable Loss: <strong style="color: #f87171;">₹{{ "{:,.0f}".format(item.planned_loss) }}</strong></div>
+                    <div>Planned Target: <strong style="color: var(--text-main);">₹{{ "{:,.0f}".format(item.planned_exit) }}</strong></div>
+                </div>
+            </div>
+
+            <!-- Actual Column -->
+            <div style="border-left: 1px solid var(--border-subtle); padding-left: 14px;">
+                <div style="font-size: 0.72rem; text-transform: uppercase; color: #34d399; font-weight: 700; margin-bottom: 8px;">
+                    Actual Execution
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
+                    <div>Executed Size: <strong style="color: var(--text-main);">₹{{ "{:,.0f}".format(item.actual_amount) }}</strong></div>
+                    <div>Actual Holding: <strong style="color: var(--text-main);">{{ item.actual_holding }}</strong></div>
+                    <div>Realized P&L: <strong style="color: {% if item.profit_loss >= 0 %}#34d399{% else %}#f87171{% endif %};">₹{{ "{:,.0f}".format(item.profit_loss) }}</strong></div>
+                    <div>Status: <strong style="color: var(--text-main);">{{ item.status }}</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discipline Notes & Audit -->
+        <div style="font-size: 0.82rem; color: #cbd5e1; background: rgba(255, 255, 255, 0.02); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <strong>Guard Audit:</strong> {{ item.discipline_notes }}
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 40px; color: var(--text-muted);">
+        No completed trades in decision journal yet. Submit a simulated trade to see Planned vs. Actual analysis.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

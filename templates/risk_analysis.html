@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Risk Analysis Result - SmartTrade Guard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span class="badge-risk {{ analysis.risk_level|lower }}" style="font-size: 0.85rem; padding: 4px 14px;">
+                {{ analysis.risk_level }} BEHAVIOURAL RISK
+            </span>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Trade #{{ trade.id }} Audit</span>
+        </div>
+        <h1 class="page-title">{{ trade.asset }} ({{ trade.trade_type }}) — Pre-Trade Risk Evaluation</h1>
+        <p class="page-subtitle">Explainable behavioural analysis and factor contribution breakdown.</p>
+    </div>
+</div>
+
+<!-- Financial Safety Override Banner if applicable -->
+{% if analysis.override_triggered %}
+<div class="alert alert-danger" style="display: block; border-width: 2px;">
+    <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; color: #ef4444; margin-bottom: 6px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        FINANCIAL SAFETY OVERRIDE TRIGGERED
+    </div>
+    <p style="font-size: 0.92rem; color: #fca5a5; line-height: 1.5;">
+        {{ analysis.override_reason or "This trade involves money you identified as essential or borrowed." }}
+    </p>
+    <div style="margin-top: 10px; font-size: 0.82rem; color: #fecaca;">
+        SmartTrade Guard strictly mandates a 30-minute cooling-off period before continuing, overriding the normal score formula.
+    </div>
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; margin-bottom: 28px;">
+    <!-- Left Column: Risk Gauge & Score Card -->
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 12px;">
+            Composite Risk Score
+        </div>
+
+        <div class="risk-meter-wrapper">
+            <div class="risk-circle">
+                <div class="risk-circle-inner">
+                    <span class="risk-score-big" style="color: {% if analysis.risk_level == 'HIGH' %}#ef4444{% elif analysis.risk_level == 'MEDIUM' %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ analysis.overall_score|int }}
+                    </span>
+                    <span class="risk-score-max">/ 100</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 8px;">
+            <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-main);">
+                Level: <span style="color: {% if analysis.risk_level == 'HIGH' %}#ef4444{% elif analysis.risk_level == 'MEDIUM' %}#f59e0b{% else %}#10b981{% endif %};">{{ analysis.risk_level }}</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                {% if analysis.risk_level == 'LOW' %}
+                    No major behavioural risk pattern detected. Simulated trade approved.
+                {% elif analysis.risk_level == 'MEDIUM' %}
+                    Warning: Elevated cognitive bias signals detected. Reflection advised.
+                {% else %}
+                    Mandatory cooling-off enforced. Break the emotional momentum.
+                {% endif %}
+            </p>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 20px 0;">
+
+        <!-- Order Summary details -->
+        <div style="text-align: left; font-size: 0.82rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>Asset & Size:</span>
+                <strong style="color: var(--text-main);">{{ trade.asset }} · ₹{{ "{:,.0f}".format(trade.amount) }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Planned Risk / Stop:</span>
+                <strong style="color: #f87171;">₹{{ "{:,.0f}".format(trade.planned_loss) }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Self-Reported Emotion:</span>
+                <strong style="color: var(--text-main);">{{ trade.emotion }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Influence Source:</span>
+                <strong style="color: #fbbf24;">{{ trade.fomo_source }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Transparent Factor Breakdown & Explainable Detections -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Transparent Factors -->
+        <div class="card">
+            <div class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #6366f1;"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                Transparent Risk Factor Weights & Scores
+            </div>
+
+            <!-- Factor 1: Loss Chasing -->
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <strong>Loss Chasing</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-faint);">(30% Weight)</span>
+                    </span>
+                    <strong style="color: {% if analysis.loss_chasing_score >= 60 %}#ef4444{% elif analysis.loss_chasing_score >= 30 %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ analysis.loss_chasing_score }} / 100
+                    </strong>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ analysis.loss_chasing_score }}%; background: #ef4444;"></div>
+                </div>
+            </div>
+
+            <!-- Factor 2: Overtrading -->
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <strong>Overtrading Frequency</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-faint);">(20% Weight)</span>
+                    </span>
+                    <strong style="color: {% if analysis.overtrading_score >= 60 %}#ef4444{% elif analysis.overtrading_score >= 30 %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ analysis.overtrading_score }} / 100
+                    </strong>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ analysis.overtrading_score }}%; background: #f59e0b;"></div>
+                </div>
+            </div>
+
+            <!-- Factor 3: FOMO / Hype -->
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <strong>FOMO / External Hype</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-faint);">(20% Weight)</span>
+                    </span>
+                    <strong style="color: {% if analysis.fomo_score >= 60 %}#ef4444{% elif analysis.fomo_score >= 30 %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ analysis.fomo_score }} / 100
+                    </strong>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ analysis.fomo_score }}%; background: #8b5cf6;"></div>
+                </div>
+            </div>
+
+            <!-- Factor 4: Risk Escalation -->
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <strong>Risk Escalation (Size Jumps)</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-faint);">(15% Weight)</span>
+                    </span>
+                    <strong style="color: {% if analysis.risk_escalation_score >= 60 %}#ef4444{% elif analysis.risk_escalation_score >= 30 %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ analysis.risk_escalation_score }} / 100
+                    </strong>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ analysis.risk_escalation_score }}%; background: #ec4899;"></div>
+                </div>
+            </div>
+
+            <!-- Factor 5: Personal Rule Violation -->
+            <div class="factor-row">
+                <div class="factor-header">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <strong>Personal Rule Violation</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-faint);">(10% Weight)</span>
+                    </span>
+                    <strong style="color: {% if analysis.rule_violation_score >= 60 %}#ef4444{% elif analysis.rule_violation_score >= 30 %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ analysis.rule_violation_score }} / 100
+                    </strong>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ analysis.rule_violation_score }}%; background: #06b6d4;"></div>
+                </div>
+            </div>
+
+            <!-- Factor 6: Emotional Signal -->
+            <div class="factor-row" style="margin-bottom: 0;">
+                <div class="factor-header">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <strong>Emotional State Signal</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-faint);">(5% Weight)</span>
+                    </span>
+                    <strong style="color: {% if analysis.emotion_score >= 60 %}#ef4444{% elif analysis.emotion_score >= 30 %}#f59e0b{% else %}#10b981{% endif %};">
+                        {{ analysis.emotion_score }} / 100
+                    </strong>
+                </div>
+                <div class="factor-bar-bg">
+                    <div class="factor-bar-fill" style="width: {{ analysis.emotion_score }}%; background: #10b981;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detected Patterns & Primary Concern -->
+        <div class="card">
+            <div class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #10b981;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Explainable Rationale & Detected Patterns
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px; margin-bottom: 18px;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-faint); font-weight: 700; margin-bottom: 4px;">
+                    Synthesized Behavioral Concern
+                </div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: #f8fafc;">
+                    {{ analysis.primary_concern }}
+                </div>
+            </div>
+
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;">
+                Active Pattern Flags:
+            </div>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                {% for pat in analysis.patterns_list %}
+                <li style="font-size: 0.88rem; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px; background: rgba(255, 255, 255, 0.02); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="color: #6366f1; font-weight: bold;">✓</span>
+                    <span>{{ pat }}</span>
+                </li>
+                {% else %}
+                <li style="font-size: 0.88rem; color: #10b981; padding: 8px 0;">
+                    ✓ All trade parameters fall within normal disciplined guidelines.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Action Bar based on Risk Level -->
+<div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    {% if analysis.risk_level == 'LOW' %}
+        <div>
+            <div style="font-weight: 700; color: #10b981;">Simulated Trade Approved</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted);">Trade has been logged in your Decision Journal.</div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <a href="{{ url_for('journal') }}" class="btn btn-primary">
+                View in Decision Journal →
+            </a>
+            <a href="{{ url_for('new_trade') }}" class="btn btn-secondary">
+                + Place Another Trade
+            </a>
+        </div>
+    {% elif analysis.risk_level == 'MEDIUM' %}
+        <div>
+            <div style="font-weight: 700; color: #fbbf24;">Review Required Before Continuing</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted);">Take a brief pause to review trade thesis and risk parameters.</div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <a href="{{ url_for('feedback', trade_id=trade.id) }}" class="btn btn-warning">
+                Proceed to Reconsideration & Feedback →
+            </a>
+            <a href="{{ url_for('journal') }}" class="btn btn-secondary">
+                Cancel to Journal
+            </a>
+        </div>
+    {% else %}
+        <!-- HIGH RISK -->
+        <div>
+            <div style="font-weight: 700; color: #ef4444;">High Behavioural Harm Intercepted</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted);">A mandatory cooling-off period has been activated.</div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <a href="{{ url_for('cooling_off', trade_id=trade.id) }}" class="btn btn-danger">
+                Enter Mandatory Cooling-Off Screen →
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

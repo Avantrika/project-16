@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Simulated Trade History - SmartTrade Guard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Simulated Trade History & Audit Log</h1>
+        <p class="page-subtitle">Complete chronological record of all submitted orders, risk scores, and closed-loop feedback actions.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('new_trade') }}" class="btn btn-primary">
+            + New Simulated Trade
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Asset & Type</th>
+                    <th>Order Size</th>
+                    <th>Emotion & FOMO</th>
+                    <th>Risk Assessment</th>
+                    <th>Feedback Outcome</th>
+                    <th>Outcome P&L</th>
+                    <th>Audit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in trades %}
+                <tr>
+                    <td style="font-size: 0.78rem; color: var(--text-faint); white-space: nowrap;">
+                        {{ t.timestamp[:16] }}
+                    </td>
+                    <td>
+                        <strong style="color: var(--text-main); font-size: 0.95rem;">{{ t.asset }}</strong>
+                        <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 700; background: {% if t.trade_type == 'BUY' %}rgba(16, 185, 129, 0.2); color: #34d399;{% else %}rgba(239, 68, 68, 0.2); color: #f87171;{% endif %}">
+                            {{ t.trade_type }}
+                        </span>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                            {{ t.holding_period }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-family: var(--font-mono); font-weight: 700; color: var(--text-main);">
+                            ₹{{ "{:,.0f}".format(t.amount) }}
+                        </div>
+                        <div style="font-size: 0.72rem; color: #f87171;">
+                            Stop: ₹{{ "{:,.0f}".format(t.planned_loss) }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.8rem; font-weight: 600; color: {% if t.emotion in ['Angry', 'Frustrated', 'Fearful'] %}#f87171{% else %}var(--text-muted){% endif %};">
+                            {{ t.emotion }}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #fbbf24;">
+                            {{ t.fomo_source }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge-risk {{ (t.risk_level or 'LOW')|lower }}">
+                            {{ t.overall_score or 0 }}/100 {{ t.risk_level or 'LOW' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if t.feedback_decision %}
+                        <div style="font-size: 0.82rem; font-weight: 700; color: {% if t.feedback_decision == 'CANCELLED' %}#10b981{% elif t.feedback_decision == 'MODIFIED' %}#818cf8{% else %}#fbbf24{% endif %};">
+                            {{ t.feedback_decision }}
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--text-faint); max-width: 140px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                            {{ t.feedback_reason }}
+                        </div>
+                        {% else %}
+                        <span style="font-size: 0.78rem; color: var(--text-muted);">
+                            {{ t.status }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-family: var(--font-mono); font-weight: 700; color: {% if t.profit_loss > 0 %}#10b981{% elif t.profit_loss < 0 %}#ef4444{% else %}var(--text-muted){% endif %};">
+                            {% if t.status == 'CANCELLED' %}
+                                CANCELLED
+                            {% elif t.outcome == 'PENDING' %}
+                                PENDING
+                            {% else %}
+                                {% if t.profit_loss >= 0 %}+{% endif %}₹{{ "{:,.0f}".format(t.profit_loss) }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('risk_analysis', trade_id=t.id) }}" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;">
+                            Inspect
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">
+                        No simulated trading history found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
